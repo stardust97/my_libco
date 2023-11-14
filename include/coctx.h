@@ -17,7 +17,8 @@ struct coctx {
 extern "C" {
   // 汇编函数coctx_swap， 保存旧协程寄存器的值到coctx结构体中，
   // 并将新协程寄存器的值从coctx中恢复到寄存器中
-  extern void coctx_swap(coctx*, coctx*) asm("coctx_swap");
+  extern void coctx_swap(coctx *, coctx *) asm("coctx_swap");
+
 };
 
 

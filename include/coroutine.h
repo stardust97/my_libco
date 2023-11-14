@@ -7,6 +7,8 @@
 
 
 namespace mylibco{
+class Coroutine;
+
 /// @brief 线程中的主协程，每个线程只有一个（thread_local）
 static thread_local Coroutine* main_coroutine_{nullptr};
 /// @brief 线程中当前正在运行的协程，每个线程只有一个
@@ -17,6 +19,8 @@ static thread_local Coroutine* cur_coroutine_{nullptr};
 class Coroutine{
   using Task = std::function<void()>;
 public:
+  /// @brief 默认构造函数用于构造一个主协程
+  Coroutine(); 
   /// @brief 用于构造一个从协程
   Coroutine(int stack_size, Task callback); 
   ~Coroutine();
@@ -25,12 +29,11 @@ public:
 public:
   /// @brief 主线程用于唤醒一个从线程
   static void Resume(Coroutine* co);
-  /// @brief 从线程让出CPU
-  static void Yeild();
-  
+  /// @brief 从线程让出CPU,调度回到主线程
+  static void Yield();
+  static Coroutine* GetCurrentCoroutine() {return cur_coroutine_;};
 private:
-  /// @brief 默认构造函数用于构造一个主协程
-  Coroutine(); 
+
   /// @brief 从协程创建后执行的函数
   static void co_fuction(Coroutine* co);
 

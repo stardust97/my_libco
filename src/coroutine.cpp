@@ -15,6 +15,10 @@ Coroutine::Coroutine(): coroutine_id_{g_coroutine_id_++}, stack_{nullptr},
   // 因为后面协程切换的时候会保存当前寄存器上下文到主协程的contex_中的。
 }
 
+Coroutine::~Coroutine(){
+  printf("cor id %d end\n",coroutine_id_);
+}
+
 Coroutine::Coroutine(int stack_size, Task callback) : coroutine_id_{g_coroutine_id_++},
     stack_{nullptr}, stack_size_{stack_size}, callback_(callback){
   if(!main_coroutine_) {
@@ -31,26 +35,42 @@ Coroutine::Coroutine(int stack_size, Task callback) : coroutine_id_{g_coroutine_
   contex_.regs[KRSP] = top;
   contex_.regs[KRBP] = top;
   // 从协程首先执行co_functino函数
-  contex_.regs[KRETAddr] = &co_fuction; // TODO 能否使用std::bind，就不用使用statci了
-  contex_.regs[KRDI] = this;
+  contex_.regs[KRETAddr] = reinterpret_cast<void*>(&co_fuction); // TODO 能否使用std::bind，就不用使用statci了
+  contex_.regs[KRDI] = reinterpret_cast<void*>(this);
   
-
 }
-
 
 void Coroutine::Resume(Coroutine* co) {
-
+  assert(co!=nullptr);
+  // 只有在主线程中才能执行Resume
+  if(cur_coroutine_ != main_coroutine_) {
+    perror("non main resume!\n");
+    exit(-1);
+  }
+  if(main_coroutine_ == nullptr) {
+    perror("main cor null\n");
+    exit(-1);
+  }
+  cur_coroutine_ = co;
+  coctx_swap(&(main_coroutine_-> contex_), &(co->contex_));
+  printf("swap to co id: %d\n", co->coroutine_id_);
 }
 
-void Coroutine::Yeild() {
-
+void Coroutine::Yield() {
+  // 只有在从线程中才能执行Yeild
+  assert(main_coroutine_ != nullptr);
+  assert(main_coroutine_ != cur_coroutine_);
+  auto tmp_co = cur_coroutine_;
+  cur_coroutine_ = main_coroutine_;
+  coctx_swap(&(tmp_co->contex_), &(main_coroutine_->contex_));
 }
 
 void Coroutine::co_fuction(Coroutine* co) {
+  assert( co!= nullptr);
   if(co -> callback_) { // 私有变量？
     co -> callback_(); // 执行从协程的任务
   }
-  Yeild(); // 执行完从协程的任务后，将CPU还给主协程
+  Yield(); // 执行完从协程的任务后，将CPU还给主协程
 }
 
 
