@@ -5,14 +5,8 @@
 
 #include "coctx.h"
 
-
-namespace mylibco{
-class Coroutine;
-
-/// @brief 线程中的主协程，每个线程只有一个（thread_local）
-static thread_local Coroutine* main_coroutine_{nullptr};
-/// @brief 线程中当前正在运行的协程，每个线程只有一个
-static thread_local Coroutine* cur_coroutine_{nullptr};
+namespace stardust{
+namespace libco{
 
   
 // 非对称有栈协程
@@ -31,7 +25,8 @@ public:
   static void Resume(Coroutine* co);
   /// @brief 从线程让出CPU,调度回到主线程
   static void Yield();
-  static Coroutine* GetCurrentCoroutine() {return cur_coroutine_;};
+
+  static Coroutine* GetCurrentCoroutine();
 private:
 
   /// @brief 从协程创建后执行的函数
@@ -53,11 +48,16 @@ private:
 
 };
 
+/// @brief 线程中的主协程，每个线程只有一个（thread_local）
+static thread_local Coroutine *main_coroutine_{nullptr};
+/// @brief 线程中当前正在运行的协程，每个线程只有一个
+static thread_local Coroutine *cur_coroutine_{nullptr};
+
 int32_t Coroutine::g_coroutine_id_ = 0;
 int32_t Coroutine:: g_coroutine_nums_ = 0;
 
 
-} // namespace mylibco
-
+} // namespace libco
+} // namespace stardust
 
 #endif

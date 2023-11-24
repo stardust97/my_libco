@@ -3,7 +3,8 @@
 #include <cstring>
 #include <cassert>
 
-namespace mylibco{
+namespace stardust{
+namespace libco{
 
 Coroutine::Coroutine(): coroutine_id_{g_coroutine_id_++}, stack_{nullptr},
     stack_size_{0} {
@@ -35,7 +36,7 @@ Coroutine::Coroutine(int stack_size, Task callback) : coroutine_id_{g_coroutine_
   contex_.regs[KRSP] = top;
   contex_.regs[KRBP] = top;
   // 从协程首先执行co_functino函数
-  contex_.regs[KRETAddr] = reinterpret_cast<void*>(&co_fuction); // TODO 能否使用std::bind，就不用使用statci了
+  contex_.regs[KRETAddr] = reinterpret_cast<void*>(&co_fuction); // TODO 能否使用std::bind，就不用使用static了
   contex_.regs[KRDI] = reinterpret_cast<void*>(this);
   
 }
@@ -65,16 +66,20 @@ void Coroutine::Yield() {
   coctx_swap(&(tmp_co->contex_), &(main_coroutine_->contex_));
 }
 
+Coroutine *Coroutine::GetCurrentCoroutine() {
+  return cur_coroutine_;
+};
+
 void Coroutine::co_fuction(Coroutine* co) {
   assert( co!= nullptr);
-  if(co -> callback_) { // 私有变量？
+  if(co -> callback_) {
     co -> callback_(); // 执行从协程的任务
   }
   Yield(); // 执行完从协程的任务后，将CPU还给主协程
 }
 
 
-} // namespace mylibco
-
+} // namespace libco
+} // namespace stardust
 
 

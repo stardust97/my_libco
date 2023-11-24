@@ -19,5 +19,5 @@ add_executable(${PROJECT_NAME} ${src_list})
 
 target_link_libraries(
   ${PROJECT_NAME}
-  my_libco
+  my_libco dl
 )

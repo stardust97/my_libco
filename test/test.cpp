@@ -8,31 +8,19 @@
 #include <mutex>
 #include <memory>
 
-
-namespace mylibco{
+namespace stardust{
+namespace libco{
 
 std::shared_ptr<Coroutine> cor;
 std::shared_ptr<Coroutine> cor2;
-class Test {
-
- public:
-  std::mutex m_coroutine_mutex;
-  int a = 1;
-};
-Test test_;
 
 void fun1() {
   std::cout << "cor1 ---- now fitst resume fun1 coroutine by thread 1" << std::endl;
-  std::cout << "cor1 ---- now begin to yield fun1 coroutine" << std::endl;
-
-  test_.m_coroutine_mutex.lock();
-
-  std::cout << "cor1 ---- coroutine lock on test_, sleep 5s begin" << std::endl;
+  std::cout << "cor1 ---- now begin to sleep fun1 coroutine" << std::endl;
 
   std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-  std::cout << "cor1 ---- sleep 5s end, now back coroutine lock" << std::endl;
+  std::cout << "cor1 ---- sleep 5s end, now back to yield" << std::endl;
 
-  test_.m_coroutine_mutex.unlock();
 
   Coroutine::Yield();
   std::cout << "cor1 ---- fun1 coroutine back, now end" << std::endl;
@@ -40,15 +28,14 @@ void fun1() {
 }
 
 void fun2() {
-  std::cout << "cor222 ---- now fitst resume fun1 coroutine by thread 1" << std::endl;
-  std::cout << "cor222 ---- now begin to yield fun1 coroutine" << std::endl;
+  std::cout << "cor2 ---- now fitst resume fun1 coroutine by thread 1" << std::endl;
+  std::cout << "cor2 ---- now begin to sleep fun1 coroutine" << std::endl;
 
   std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-  std::cout << "cor222 ---- coroutine2 want to get coroutine lock of test_" << std::endl;
-  test_.m_coroutine_mutex.lock();
+  std::cout << "cor2 ---- sleep 5s end, now back to yield" << std::endl;
 
-  std::cout << "cor222 ---- coroutine2 get coroutine lock of test_ succ" << std::endl;
-
+  Coroutine::Yield();
+  std::cout << "cor2 ---- fun1 coroutine back, now end" << std::endl;
 }
 
 
@@ -72,7 +59,7 @@ void* thread2_func(void*) {
 }
 
 } // namespace mylibc
-
+} // namespace stardust
 
 void callback() {
   for(int i=0 ;i<10;++i) {
@@ -98,9 +85,9 @@ int main(int argc, char* argv[]) {
   // thread1_func(NULL);
 
   // pthread_join(thread2, NULL);
-  mylibco::cor = std::make_shared<mylibco::Coroutine>(); //main
-  mylibco::cor2 = std::make_shared<mylibco::Coroutine>(128 * 1024, callback);
-  mylibco::Coroutine::Resume(mylibco::cor2.get());
+  // mylibco::cor = std::make_shared<mylibco::Coroutine>(); //main
+  // mylibco::cor2 = std::make_shared<mylibco::Coroutine>(128 * 1024, callback);
+  // mylibco::Coroutine::Resume(mylibco::cor2.get());
 
   std::cout << "main end" << std::endl;
 }
